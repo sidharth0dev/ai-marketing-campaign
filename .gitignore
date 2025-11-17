@@ -1,0 +1,20 @@
+# Python / FastAPI
+/app/.venv
+/app/__pycache__/
+/app/*.sqlite
+/app/db.sqlite
+*.pyc
+
+# Google Cloud
+/app/service-account-key.json
+service-account-key.json
+
+# Node.js / Next.js
+/frontend/node_modules
+/frontend/.next
+/frontend/out
+/frontend/.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
