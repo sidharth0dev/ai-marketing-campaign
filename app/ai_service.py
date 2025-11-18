@@ -13,7 +13,7 @@ from PIL import Image as PIL_Image
 from vertexai.generative_models import GenerationConfig, GenerativeModel, Part
 from vertexai.vision_models import Image as VertexImage, ImageGenerationModel
 
-from .config import settings
+from config import settings
 
 # ---------------------------------------------------------------------------
 # Setup: Configure Vertex AI and Static Image Directory
