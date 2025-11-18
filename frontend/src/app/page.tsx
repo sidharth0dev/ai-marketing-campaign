@@ -116,6 +116,9 @@ export default function DashboardPage() {
   const [productImage, setProductImage] = useState<File | null>(null);
   const [enableABTesting, setEnableABTesting] = useState(false);
   const [numVariations, setNumVariations] = useState(2);
+  const [competitorUrl, setCompetitorUrl] = useState("");
+  const [competitorAnalysis, setCompetitorAnalysis] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     if (!authToken) {
@@ -231,6 +234,30 @@ export default function DashboardPage() {
     }
   };
 
+  const handleAnalyzeCompetitor = async () => {
+    if (!competitorUrl.trim()) {
+      toast.error("Enter a competitor URL to scan.");
+      return;
+    }
+    setIsAnalyzing(true);
+    setCompetitorAnalysis(null);
+    try {
+      const response = await api.post<{ analysis: string }>("/analyze-competitor", {
+        url: competitorUrl.trim(),
+        product_name: productName.trim() || "My product",
+      });
+      setCompetitorAnalysis(response.data.analysis);
+      toast.success("Competitor strategy captured.");
+    } catch (error: any) {
+      console.error("Competitor analysis failed", error);
+      const message =
+        error?.response?.data?.detail || "Unable to analyze the competitor. Please try again.";
+      toast.error(message);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const handleRegenerateImage = async (campaignId: number, platform: string, variationNumber: number = 0) => {
     try {
       const toastId = toast.loading(`Regenerating image for ${platform}...`);
@@ -283,6 +310,9 @@ export default function DashboardPage() {
       }
       formData.append("enable_ab_testing", enableABTesting.toString());
       formData.append("num_variations", numVariations.toString());
+      if (competitorAnalysis) {
+        formData.append("competitor_analysis", competitorAnalysis);
+      }
 
       const response = await api.post<CampaignDetails>(
         "/api/v1/generate/campaign",
@@ -512,6 +542,51 @@ export default function DashboardPage() {
                     <p className="text-xs text-slate-300">
                       Uploaded images are analyzed to extract precise colors, textures, brand details, and feature highlights. The generation model uses these insights when creating prompts.
                     </p>
+                  </div>
+
+                  <div className="space-y-3 rounded-lg border border-indigo-500/30 bg-slate-900/40 p-4">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-100">Competitor Intelligence (Optional)</p>
+                      <p className="text-xs text-slate-300">
+                        Drop in a competitor landing page to scout their positioning before you launch.
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Input
+                        id="competitorUrl"
+                        type="url"
+                        value={competitorUrl}
+                        onChange={(event) => setCompetitorUrl(event.target.value)}
+                        placeholder="https://their-site.com/offer"
+                        className="flex-1"
+                        disabled={isAnalyzing || isGenerating}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleAnalyzeCompetitor}
+                        disabled={isAnalyzing || !competitorUrl.trim()}
+                        className="w-full sm:w-auto border-indigo-400/60 text-indigo-200 hover:border-indigo-300 hover:bg-indigo-500/10"
+                      >
+                        {isAnalyzing ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Scanning...
+                          </span>
+                        ) : (
+                          "Scan Strategy"
+                        )}
+                      </Button>
+                    </div>
+                    {isAnalyzing && (
+                      <p className="text-xs text-indigo-200">Scanning competitor strategy...</p>
+                    )}
+                    {competitorAnalysis && !isAnalyzing && (
+                      <div className="rounded-lg border border-indigo-500/40 bg-gray-900/80 p-4 text-slate-100">
+                        <p className="text-sm font-semibold text-indigo-300">⚔️ Market Opportunity Detected</p>
+                        <p className="mt-2 text-sm leading-relaxed text-slate-200">{competitorAnalysis}</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-3 rounded-lg border border-white/10 bg-slate-800/30 p-4">
