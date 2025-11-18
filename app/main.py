@@ -58,6 +58,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
 origins = [
+    "https://ai-marketing-campaign.vercel.app",
     "https://ai-marketing-campaign-9bd9.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
