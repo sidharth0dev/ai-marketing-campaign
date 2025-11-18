@@ -5,7 +5,12 @@ from sqlmodel import Session, SQLModel, create_engine
 from config import settings
 
 
-engine = create_engine(settings.database_url, connect_args={"check_same_thread": False})
+connect_args: dict[str, bool] = {}
+
+if settings.database_url.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+
+engine = create_engine(settings.database_url, connect_args=connect_args)
 
 
 def create_db_and_tables() -> None:
