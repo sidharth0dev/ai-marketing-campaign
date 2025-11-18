@@ -14,7 +14,7 @@ from vertexai.generative_models import GenerationConfig, GenerativeModel, Part
 from vertexai.vision_models import Image as VertexImage, ImageGenerationModel
 
 from config import settings
-from scraper import scrape_competitor_text
+from scraper import scrape_url
 
 # ---------------------------------------------------------------------------
 # Setup: Configure Vertex AI and Static Image Directory
@@ -271,7 +271,7 @@ CAPTION: "{caption}"
 async def analyze_competitor(competitor_url: str, product_name: str) -> str:
     """Summarize a competitor page and propose a counter strategy."""
 
-    scraped_text = scrape_competitor_text(competitor_url)
+    scraped_text = scrape_url(competitor_url)
     prompt = (
         "You are a strategic marketing expert. Analyze a competitor website and craft a counter plan.\n"
         f"Competitor content:\n---\n{scraped_text}\n---\n"

@@ -7,8 +7,6 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import httpx
-from bs4 import BeautifulSoup
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
@@ -29,6 +27,8 @@ from ai_service import (
 from config import settings
 from database import create_db_and_tables, get_session
 from models import Campaign, GeneratedImage, GeneratedText, User
+from scraper import scrape_url
+
 from schemas import (
     ABTestSelectRequest,
     AssetLibraryFilter,
@@ -244,20 +244,16 @@ async def generate_campaign(
             image_analysis = None
 
     # --- Node 1: Scraper ---
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(product_url)
-            response.raise_for_status()
-    except httpx.RequestError as e:
-        raise HTTPException(status_code=400, detail=f"Could not fetch URL: {e}")
+    text_content = scrape_url(product_url)
 
-    soup = BeautifulSoup(response.text, "html.parser")
-    main_content = soup.find("main") or soup.find("body")
-    if main_content is None:
-        raise HTTPException(status_code=400, detail="Could not extract content from URL.")
-    text_content = main_content.get_text(separator="\n", strip=True)
-    if not text_content:
-        raise HTTPException(status_code=400, detail="Could not extract content from URL.")
+    if not text_content or text_content.startswith("Scraping failed"):
+        print("⚠ Product page scrape failed or was blocked. Falling back to user-provided context.")
+        fallback_name = (product_name or "Unknown product").strip() or "Unknown product"
+        text_content = (
+            f"Product URL: {product_url}\n"
+            f"Product Name or user input: {fallback_name}\n"
+            "No on-page details could be scraped; rely on this metadata and any uploaded images."
+        )
 
     if competitor_analysis:
         text_content = (
@@ -745,4 +741,3 @@ async def export_campaign_assets(
             "Content-Disposition": f"attachment; filename={campaign.product_name.replace(' ', '_')}_assets.zip"
         }
     )
-

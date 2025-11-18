@@ -97,13 +97,13 @@ def scrape_via_jina(url: str) -> str:
         return ""
 
 
-def scrape_competitor_text(url: str) -> str:
-    """Fetch and summarize key text blocks from a competitor page.
+def scrape_url(url: str) -> str:
+    """Fetch and summarize key text blocks from a URL.
 
     Uses a two-tier strategy:
     1. First tries direct scraping (fast, works for most sites)
     2. Falls back to Jina Reader API if direct fails or returns insufficient content
-    
+
     Returns up to the first 3,000 characters collected.
     If both methods fail, a safe fallback string is returned so callers
     can continue gracefully.
