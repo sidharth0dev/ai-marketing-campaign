@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 
 USER_AGENT: Final[str] = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/120.0.0.0 Safari/537.36"
 )
@@ -47,11 +47,23 @@ def scrape_competitor_text(url: str) -> str:
                 collected.append(text)
 
         combined = " ".join(collected).strip()
-        if not combined:
-            return "Unable to scrape content."
 
-        return combined[:CONTENT_LIMIT]
+        if len(combined) < 100:
+            meta_description = soup.find("meta", attrs={"name": "description"})
+            meta_text = meta_description.get("content", "").strip() if meta_description else ""
+            title_tag = soup.find("title")
+            title_text = title_tag.get_text(strip=True) if title_tag else ""
+            fallback = " ".join(filter(None, [title_text, meta_text])).strip()
+            combined = f"{combined} {fallback}".strip()
+
+        combined = combined[:CONTENT_LIMIT]
+        print(f"Scraping status: {response.status_code}, Length: {len(combined)}")
+
+        if not combined:
+            return "Scraping failed. Please extract insights manually."
+
+        return combined
     except Exception as exc:  # pragma: no cover - defensive logging
         print(f"⚠ Failed to parse competitor content for {url}: {exc}")
-        return "Unable to scrape content."
+        return "Scraping failed. Please extract insights manually."
 
