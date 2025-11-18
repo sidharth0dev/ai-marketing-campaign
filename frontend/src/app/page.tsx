@@ -320,8 +320,10 @@ export default function DashboardPage() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <header className="flex flex-col gap-4 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Campaign Studio</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-50">
+              Campaign Studio
+            </h1>
+            <p className="text-sm text-slate-200">
               Welcome back! You’re ready to generate, analyze, and manage your AI campaigns.
             </p>
           </div>
@@ -334,33 +336,33 @@ export default function DashboardPage() {
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Card className="transition-transform duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-emerald-500/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardDescription>Total campaigns</CardDescription>
+              <CardDescription className="text-slate-200">Total campaigns</CardDescription>
               <FolderOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <CardTitle className="text-3xl font-semibold">
+              <CardTitle className="text-4xl font-semibold text-blue-400">
                 {stats.totalCampaigns}
               </CardTitle>
             </CardContent>
           </Card>
           <Card className="transition-transform duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-emerald-500/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardDescription>Assets in current view</CardDescription>
+              <CardDescription className="text-slate-200">Assets in current view</CardDescription>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <CardTitle className="text-3xl font-semibold">
+              <CardTitle className="text-4xl font-semibold text-blue-400">
                 {stats.totalImages}
               </CardTitle>
             </CardContent>
           </Card>
           <Card className="sm:col-span-2 lg:col-span-1 transition-transform duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-emerald-500/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardDescription>Last generated</CardDescription>
+              <CardDescription className="text-slate-200">Last generated</CardDescription>
               <CalendarClock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <CardTitle className="text-lg font-medium">
+              <CardTitle className="text-2xl font-semibold text-blue-300">
                 {formatTime(stats.lastRun)}
               </CardTitle>
             </CardContent>
@@ -370,8 +372,8 @@ export default function DashboardPage() {
         <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
           <Card className="h-full transition-transform duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-emerald-500/20">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Your campaigns</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-lg text-white">Your campaigns</CardTitle>
+              <CardDescription className="text-slate-200">
                 Select a campaign to review its outputs or create a new one below.
               </CardDescription>
             </CardHeader>
@@ -390,7 +392,7 @@ export default function DashboardPage() {
               <ScrollArea className="h-[420px] pr-2">
                 <div className="space-y-2">
                   {campaigns.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-slate-300">
                       No campaigns yet. Generate your first campaign to see it here.
                     </p>
                   )}
@@ -406,11 +408,11 @@ export default function DashboardPage() {
                     >
                       <div className="flex items-center justify-between">
                         <h3 className="font-medium">{campaign.product_name}</h3>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-slate-300">
                           {formatDate(campaign.created_at)}
                         </span>
                       </div>
-                      <p className="mt-1 truncate text-xs text-muted-foreground">
+                      <p className="mt-1 truncate text-xs text-slate-300">
                         {campaign.product_url}
                       </p>
                     </button>
@@ -426,8 +428,8 @@ export default function DashboardPage() {
               className="transition-transform duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-emerald-500/20"
             >
               <CardHeader>
-                <CardTitle>Create a new campaign</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-white">Create a new campaign</CardTitle>
+                <CardDescription className="text-slate-200">
                   Paste a product URL and optionally upload a product photo. The photo is
                   analyzed pixel-by-pixel to enrich the generated prompts.
                 </CardDescription>
@@ -482,7 +484,7 @@ export default function DashboardPage() {
                       disabled={isGenerating}
                     />
                     {productImage && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2 text-sm text-slate-300">
                         <span>Selected: {productImage.name}</span>
                         <span>•</span>
                         <span>{(productImage.size / 1024).toFixed(1)} KB</span>
@@ -503,7 +505,7 @@ export default function DashboardPage() {
                         </Button>
                       </div>
                     )}
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-slate-300">
                       Uploaded images are analyzed to extract precise colors, textures, brand details, and feature highlights. The generation model uses these insights when creating prompts.
                     </p>
                   </div>
@@ -537,7 +539,7 @@ export default function DashboardPage() {
                           disabled={isGenerating}
                           className="w-24"
                         />
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-slate-300">
                           Generate multiple variations per platform to test which performs best.
                         </p>
                       </div>
@@ -553,7 +555,7 @@ export default function DashboardPage() {
 
             <Card className="transition-transform duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-emerald-500/20">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex items-center justify-between text-white">
                   Campaign preview
                   <div className="flex items-center gap-2">
                     {activeCampaign && (
@@ -570,7 +572,7 @@ export default function DashboardPage() {
                     {isFetchingCampaign && <Loader2 className="h-4 w-4 animate-spin" />}
                   </div>
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-slate-200">
                   {activeCampaign
                     ? `Generated on ${formatDate(activeCampaign.created_at)}`
                     : "Select a campaign or generate a new one to see the details."}
