@@ -516,7 +516,7 @@ export default function DashboardPage() {
                         checked={enableABTesting}
                         onChange={(e) => setEnableABTesting(e.target.checked)}
                         disabled={isGenerating}
-                        className="h-4 w-4 rounded border-gray-300"
+                        className="h-4 w-4 rounded border-white/40 bg-slate-900/60 text-pink-400 focus:ring-white/40"
                       />
                       <Label htmlFor="enableABTesting" className="cursor-pointer font-medium">
                         Enable A/B Testing
