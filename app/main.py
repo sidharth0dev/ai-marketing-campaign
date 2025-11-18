@@ -18,16 +18,16 @@ from PIL import Image as PIL_Image
 from sqlalchemy.orm import selectinload, joinedload
 from sqlmodel import Session, select
 
-from .ai_service import (
+from ai_service import (
     analyze_product_image,
     generate_image_from_prompt,
     get_analytics_for_caption,
     get_creative_brief,
 )
-from .config import settings
-from .database import create_db_and_tables, get_session
-from .models import Campaign, GeneratedImage, GeneratedText, User
-from .schemas import (
+from config import settings
+from database import create_db_and_tables, get_session
+from models import Campaign, GeneratedImage, GeneratedText, User
+from schemas import (
     ABTestSelectRequest,
     AssetLibraryFilter,
     CampaignGenerateRequest,
@@ -42,7 +42,7 @@ from .schemas import (
     UserCreate,
     UserRead,
 )
-from .security import (
+from security import (
     create_access_token,
     get_current_user,
     get_password_hash,
