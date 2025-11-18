@@ -327,7 +327,11 @@ export default function DashboardPage() {
               Welcome back! You’re ready to generate, analyze, and manage your AI campaigns.
             </p>
           </div>
-          <Button variant="ghost" onClick={logout}>
+          <Button
+            variant="ghost"
+            onClick={logout}
+            className="rounded-full border border-white/30 bg-white/10 px-6 text-slate-50 shadow-lg transition-all duration-200 hover:scale-105 hover:bg-white/20 hover:text-white"
+          >
             <LogOut className="mr-2 h-4 w-4" />
             Logout
           </Button>
