@@ -14,6 +14,7 @@ from vertexai.generative_models import GenerationConfig, GenerativeModel, Part
 from vertexai.vision_models import Image as VertexImage, ImageGenerationModel
 
 from config import settings
+from scraper import scrape_competitor_text
 
 # ---------------------------------------------------------------------------
 # Setup: Configure Vertex AI and Static Image Directory
@@ -262,6 +263,37 @@ CAPTION: "{caption}"
     )
 
     return _clean_json_response(response.text)
+
+
+# ---------------------------------------------------------------------------
+# Node 3b: Competitor Analysis (Vertex AI)
+# ---------------------------------------------------------------------------
+async def analyze_competitor(competitor_url: str, product_name: str) -> str:
+    """Summarize a competitor page and propose a counter strategy."""
+
+    scraped_text = scrape_competitor_text(competitor_url)
+    prompt = (
+        "You are a strategic marketing expert. Analyze a competitor website and craft a counter plan.\n"
+        f"Competitor content:\n---\n{scraped_text}\n---\n"
+        f"My product: {product_name}\n\n"
+        "Instructions:\n"
+        "1. Identify the competitor's main selling point.\n"
+        "2. Describe their tone of voice.\n"
+        "3. Note one meaningful weakness or gap.\n"
+        "4. Provide a specific counter-strategy my product can execute.\n"
+        "Respond in under four sentences."
+    )
+
+    try:
+        response = await text_model.generate_content_async(
+            prompt,
+            generation_config=GenerationConfig(max_output_tokens=512),
+        )
+        analysis = response.text.strip()
+        return analysis or "Unable to generate analysis."
+    except Exception as exc:
+        print(f"⚠ Competitor analysis failed: {exc}")
+        return "Unable to generate analysis."
 
 # ---------------------------------------------------------------------------
 # Node 4: The "AI Artist" (Vertex AI Imagen)

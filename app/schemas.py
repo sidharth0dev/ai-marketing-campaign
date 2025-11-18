@@ -86,6 +86,7 @@ class CampaignReadWithDetails(CampaignRead):
 class CampaignGenerateRequest(BaseModel):
     product_url: str
     product_name: Optional[str] = None
+    competitor_analysis: Optional[str] = None
 
 
 class CampaignGenerateResponse(CampaignReadWithDetails):
