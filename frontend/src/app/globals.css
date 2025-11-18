@@ -122,6 +122,11 @@ body {
   overflow-x: hidden;
 }
 
+::selection {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted-foreground)) transparent;
