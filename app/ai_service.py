@@ -272,22 +272,35 @@ async def analyze_competitor(competitor_url: str, product_name: str) -> str:
     """Summarize a competitor page and propose a counter strategy."""
 
     scraped_text = scrape_url(competitor_url)
-    prompt = (
-        "You are a strategic marketing expert. Analyze a competitor website and craft a counter plan.\n"
-        f"Competitor content:\n---\n{scraped_text}\n---\n"
-        f"My product: {product_name}\n\n"
-        "Instructions:\n"
-        "1. Identify the competitor's main selling point.\n"
-        "2. Describe their tone of voice.\n"
-        "3. Note one meaningful weakness or gap.\n"
-        "4. Provide a specific counter-strategy my product can execute.\n"
-        "Respond in under four sentences."
-    )
+    cleaned_text = (scraped_text or "").strip() or "No competitor content was captured."
+    excerpt = cleaned_text[:4000]
+
+    prompt = f"""You are a ruthless, elite Chief Marketing Officer. Your goal is to destroy the competition.
+
+I have scraped the landing page of a competitor:
+---
+{excerpt}
+---
+
+My product is: {product_name}
+
+Analyze the competitor's text and output a War Room report in clean Markdown with EXACTLY these sections (include the emojis and keep each to 2-3 sentences):
+
+1. 🧠 Their Psychological Hook
+   - Identify the precise psychological trigger they lean on (fear, greed, status, convenience, etc.) and explain how they manipulate it.
+
+2. 🩸 The Weakness (Gap Analysis)
+   - Expose what's missing, overemphasized, or implied to be weak. Read between the lines.
+
+3. 🚀 The Counter-Attack
+   - Give one aggressive, specific positioning move for {product_name} to win the narrative.
+
+Do not add extra sections or fluff."""
 
     try:
         response = await text_model.generate_content_async(
             prompt,
-            generation_config=GenerationConfig(max_output_tokens=512),
+            generation_config=GenerationConfig(max_output_tokens=512, response_mime_type="text/markdown"),
         )
         analysis = response.text.strip()
         return analysis or "Unable to generate analysis."

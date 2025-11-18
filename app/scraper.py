@@ -132,13 +132,15 @@ def scrape_url(url: str) -> str:
     try:
         jina_result = scrape_via_jina(url)
         
-        if jina_result and len(jina_result) >= MIN_CONTENT_LENGTH:
-            return jina_result
-        
         if jina_result:
-            print(f"Jina scrape returned only {len(jina_result)} chars (< {MIN_CONTENT_LENGTH})")
-        else:
-            print("Jina scrape also failed/empty")
+            trimmed = jina_result[:CONTENT_LIMIT]
+            if len(trimmed) < 500:
+                trimmed = ("[WARNING: The website blocked most content, analysis may be limited based on meta-tags only]
+" + trimmed)
+            print(f"Jina scraping status: length={len(trimmed)}")
+            return trimmed
+
+        print("Jina scrape also failed/empty")
     except Exception as exc:
         print(f"⚠ Jina scrape exception: {exc}")
 
