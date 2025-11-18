@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
-from .models import CampaignBase, GeneratedImageBase, GeneratedTextBase
+from models import CampaignBase, GeneratedImageBase, GeneratedTextBase
 
 
 class UserBase(BaseModel):

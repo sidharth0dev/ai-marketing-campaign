@@ -8,9 +8,9 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlmodel import Session, select
 
-from .config import settings
-from .database import get_session
-from .models import User
+from config import settings
+from database import get_session
+from models import User
 
 ph = PasswordHasher()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token/")
