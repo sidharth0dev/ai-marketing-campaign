@@ -750,6 +750,61 @@ def update_image_collection(
     return {"status": "success", "message": "Collection updated"}
 
 
+
+
+@app.get("/campaigns/{campaign_id}/download-image")
+async def download_campaign_image(
+    campaign_id: int,
+    image_url: str,
+    session: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    campaign = (
+        session.exec(
+            select(Campaign)
+            .where(Campaign.id == campaign_id)
+            .options(selectinload(Campaign.images))
+        ).first()
+    )
+
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+
+    if campaign.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    allowed_urls = {img.image_url for img in campaign.images if img.image_url}
+    if campaign.original_product_image_url:
+        allowed_urls.add(campaign.original_product_image_url)
+
+    if image_url not in allowed_urls:
+        raise HTTPException(status_code=404, detail="Image not part of this campaign")
+
+    try:
+        if image_url.startswith("http"):
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                response = await client.get(image_url)
+                response.raise_for_status()
+                content = response.content
+        else:
+            file_path = Path(image_url.lstrip("/"))
+            if not file_path.exists():
+                raise HTTPException(status_code=404, detail="Local image not found")
+            content = file_path.read_bytes()
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"⚠ Failed to proxy download for {image_url}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to download image")
+
+    filename = image_url.split("/")[-1] or "campaign_image.png"
+
+    return StreamingResponse(
+        io.BytesIO(content),
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
 @app.get("/api/v1/assets/export/{campaign_id}")
 async def export_campaign_assets(
     campaign_id: int,
@@ -774,34 +829,68 @@ async def export_campaign_assets(
     
     # Create a temporary ZIP file in memory
     zip_buffer = io.BytesIO()
-    
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-        # Add all images from the campaign
-        for image in campaign.images:
-            if image.image_url and image.image_url.startswith("/static/"):
-                # Extract filename from URL
+
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            captions_lines = []
+
+            # Add all images from the campaign
+            for image in campaign.images:
+                if not image.image_url:
+                    continue
+
                 filename = image.image_url.split("/")[-1]
-                filepath = Path("static/images") / filename
-                
-                if filepath.exists():
-                    # Add to ZIP with organized folder structure
-                    zip_path = f"{campaign.product_name}/{image.platform}/"
-                    if image.variation_number and image.variation_number > 0:
-                        zip_path += f"variation_{image.variation_number}_{filename}"
-                    else:
-                        zip_path += filename
-                    
-                    zip_file.write(filepath, zip_path)
-        
-        # Add original product image if available
-        if campaign.original_product_image_url:
-            orig_filename = campaign.original_product_image_url.split("/")[-1]
-            orig_filepath = Path("static/images") / orig_filename
-            if orig_filepath.exists():
-                zip_file.write(orig_filepath, f"{campaign.product_name}/original_product_{orig_filename}")
-    
+                zip_path = f"{campaign.product_name}/{image.platform}/"
+                if image.variation_number and image.variation_number > 0:
+                    zip_path += f"variation_{image.variation_number}_{filename}"
+                else:
+                    zip_path += filename or "image.png"
+
+                if image.image_url.startswith("http"):
+                    try:
+                        response = await client.get(image.image_url)
+                        response.raise_for_status()
+                        zip_file.writestr(zip_path, response.content)
+                    except Exception as e:
+                        print(f"⚠ Failed to download GCS image {image.image_url}: {e}")
+                else:
+                    filepath = Path(image.image_url.lstrip("/"))
+                    if filepath.exists():
+                        zip_file.write(filepath, zip_path)
+
+            # Add original product image if available
+            if campaign.original_product_image_url:
+                orig_filename = campaign.original_product_image_url.split("/")[-1] or "original_product.png"
+                zip_path = f"{campaign.product_name}/original_product_{orig_filename}"
+                if campaign.original_product_image_url.startswith("http"):
+                    try:
+                        response = await client.get(campaign.original_product_image_url)
+                        response.raise_for_status()
+                        zip_file.writestr(zip_path, response.content)
+                    except Exception as e:
+                        print(f"⚠ Failed to download original product image: {e}")
+                else:
+                    orig_filepath = Path(campaign.original_product_image_url.lstrip("/"))
+                    if orig_filepath.exists():
+                        zip_file.write(orig_filepath, zip_path)
+
+            # Add captions summary
+            if campaign.texts:
+                captions_lines = [
+                    f"Platform: {text.platform}
+Caption: {text.caption}
+"
+                    for text in campaign.texts
+                ]
+                captions_content = "
+".join(captions_lines)
+                zip_file.writestr(
+                    f"{campaign.product_name}/captions.txt",
+                    captions_content or "No captions available."
+                )
+
     zip_buffer.seek(0)
-    
+
     # Return as streaming response
     return StreamingResponse(
         io.BytesIO(zip_buffer.read()),

@@ -186,10 +186,21 @@ export default function DashboardPage() {
     toast.success("Caption copied to clipboard!");
   };
 
-  const handleDownload = async (imageUrl: string) => {
+  const handleDownload = async (imageUrl: string, campaignId?: number) => {
+    if (!campaignId) {
+      toast.error("Campaign not found.");
+      return;
+    }
+
     try {
-      const assetUrl = resolveAssetUrl(imageUrl);
-      const response = await fetch(assetUrl);
+      const response = await fetch(
+        `${API_URL}/campaigns/${campaignId}/download-image?image_url=${encodeURIComponent(imageUrl)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}` || "",
+          },
+        }
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch image");
       }
@@ -197,7 +208,6 @@ export default function DashboardPage() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      // Extract filename from URL or use default
       const filename = imageUrl.split("/").pop() || "campaign-image.png";
       link.download = filename;
       document.body.appendChild(link);
@@ -725,7 +735,7 @@ export default function DashboardPage() {
                                           <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => handleDownload(img.image_url)}
+                                            onClick={() => handleDownload(img.image_url, activeCampaign?.id)}
                                             className="h-7 flex-1 text-xs text-slate-200 hover:text-white"
                                           >
                                             <Download className="h-3 w-3" />
@@ -804,7 +814,7 @@ export default function DashboardPage() {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => handleDownload(mainImage.image_url)}
+                                        onClick={() => handleDownload(mainImage.image_url, activeCampaign?.id)}
                                         className="rounded-full border-white/20 bg-white/5 text-slate-100 shadow-md transition-all duration-200 hover:scale-105 hover:border-pink-400 hover:shadow-[0_0_25px_rgba(236,72,153,0.35)]"
                                       >
                                         <Download className="mr-2 h-4 w-4" />
