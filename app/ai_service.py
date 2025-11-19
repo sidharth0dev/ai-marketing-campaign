@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 
 import vertexai
 from PIL import Image as PIL_Image
-from vertexai.generative_models import GenerationConfig, GenerativeModel, Part
+from vertexai.generative_models import Content, GenerationConfig, GenerativeModel, Part
 from vertexai.vision_models import Image as VertexImage, ImageGenerationModel
 
 from config import settings
@@ -116,8 +116,9 @@ Analyze this product image in extreme detail. Extract and describe in JSON forma
 Be extremely specific and accurate. This will be used to generate product images that match exactly.
 """
 
+        prompt_part = Part.from_text(prompt)
         response = await text_model.generate_content_async(
-            [image_part, prompt],
+            [image_part, prompt_part],
             generation_config=GenerationConfig(response_mime_type="application/json"),
         )
 
@@ -230,8 +231,9 @@ The JSON object MUST contain the following structure, with unique and compelling
 }}
 """
 
+    prompt_part = Part.from_text(prompt)
     response = await text_model.generate_content_async(
-        prompt,
+        [prompt_part],
         generation_config=GenerationConfig(response_mime_type="application/json"),
     )
 
@@ -257,8 +259,9 @@ You are a direct-response marketing expert. Analyze the following ad caption. Yo
 CAPTION: "{caption}"
 """
 
+    prompt_part = Part.from_text(prompt)
     response = await text_model.generate_content_async(
-        prompt,
+        [prompt_part],
         generation_config=GenerationConfig(response_mime_type="application/json"),
     )
 
@@ -298,8 +301,9 @@ Analyze the competitor's text and output a War Room report in clean Markdown wit
 Do not add extra sections or fluff."""
 
     try:
+        prompt_part = Part.from_text(prompt)
         response = await text_model.generate_content_async(
-            prompt,
+            [prompt_part],
             generation_config=GenerationConfig(max_output_tokens=512, response_mime_type="text/markdown"),
         )
         analysis = response.text.strip()
