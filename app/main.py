@@ -22,6 +22,7 @@ from ai_service import (
     generate_image_from_prompt,
     get_analytics_for_caption,
     get_creative_brief,
+    upload_image_to_gcs,
 )
 from config import settings
 from database import create_db_and_tables, get_session
@@ -242,28 +243,26 @@ async def generate_campaign(
             image_bytes = await product_image.read()
             if image_bytes:
                 uploaded_image = PIL_Image.open(io.BytesIO(image_bytes))
-                # Convert to RGB if needed (required for most image processing)
                 if uploaded_image.mode != 'RGB':
                     uploaded_image = uploaded_image.convert('RGB')
                 print(f"✓ Product image uploaded: {product_image.filename}, size: {uploaded_image.size}")
-                
-                # Save the original product image for comparison tool
-                filename = f"original_{uuid.uuid4()}.png"
-                filepath = IMAGE_DIR / filename
-                await asyncio.to_thread(uploaded_image.save, filepath, "PNG")
-                original_product_image_url = f"/static/images/{filename}"
-                print(f"✓ Original product image saved: {original_product_image_url}")
-                
-                # Analyze the image using Gemini Vision to capture exact visual details
+
                 print("🔍 Analyzing product image with Gemini Vision (for Creative Director context)...")
                 image_analysis = await analyze_product_image(uploaded_image)
                 if image_analysis:
                     print(f"✓ Image analysis complete. Product details extracted: {len(image_analysis)} fields")
                 else:
                     print("⚠ Image analysis returned empty result, proceeding without image-derived details")
+
+                try:
+                    safe_name = Path(product_image.filename).name or "product.png"
+                    gcs_filename = f"originals/{uuid.uuid4()}_{safe_name}"
+                    original_product_image_url = await upload_image_to_gcs(image_bytes, gcs_filename)
+                    print(f"✓ Original product image uploaded to GCS: {original_product_image_url}")
+                except Exception as upload_error:
+                    print(f"⚠ Failed to upload original product image to GCS: {upload_error}")
         except Exception as e:
             print(f"⚠ Failed to process uploaded image: {e}")
-            # Continue without reference image if processing fails
             image_analysis = None
 
     # --- Node 1: Scraper ---

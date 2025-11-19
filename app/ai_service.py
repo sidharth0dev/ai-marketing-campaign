@@ -542,4 +542,5 @@ __all__ = [
     "get_analytics_for_caption",
     "generate_image_from_prompt",
     "generate_image_from_reference",
+    "upload_image_to_gcs",
 ]

@@ -693,9 +693,7 @@ export default function DashboardPage() {
                                     const isSelected = img.is_selected ?? false;
                                     const isMain = (img.variation_number ?? 0) === 0;
                                     const fullImageUrl = resolveAssetUrl(img.image_url);
-                                    const originalUrl = img.original_image_url
-                                      ? `${API_URL}${img.original_image_url}`
-                                      : null;
+                                    const originalUrl = resolveAssetUrl(img.original_image_url);
 
                                     return (
                                       <div

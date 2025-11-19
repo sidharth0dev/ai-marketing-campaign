@@ -10,7 +10,7 @@ git add app/
 git commit -m "Update: Describe your backend changes here"
 git push
 
-- deployment backend master command
+- deployment backend master commands
 
 cd app
 gcloud run deploy ai-marketing-backend --source . --region us-central1 \
