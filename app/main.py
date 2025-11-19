@@ -232,28 +232,27 @@ async def generate_campaign(
             image_analysis = None
 
     # --- Node 1: Scraper ---
-    text_content = ""
-    try:
-        async with httpx.AsyncClient(follow_redirects=True) as client:
-            response = await client.get(product_url, follow_redirects=True)
-            response.raise_for_status()
-            soup = BeautifulSoup(response.text, "html.parser")
-            main_content = soup.find("main") or soup.find("body")
-            if main_content:
-                text_content = main_content.get_text(separator="
-", strip=True)
-    except Exception as scrape_error:
-        print(f"⚠ Product scrape failed for {product_url}: {scrape_error}")
+    product_description = f"Product: {(product_name or 'Unknown product').strip() or 'Unknown product'}"
 
-    if not text_content:
-        fallback_name = (product_name or "Unknown product").strip() or "Unknown product"
-        text_content = (
-            f"Product URL: {product_url}
-"
-            f"Product Name or user input: {fallback_name}
-"
-            "No on-page details could be scraped; rely on this metadata and any uploaded images."
-        )
+    if product_url:
+        try:
+            print(f"Scraping URL: {product_url}")
+            async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
+                response = await client.get(product_url)
+                response.raise_for_status()
+
+                soup = BeautifulSoup(response.text, "html.parser")
+                text_elements = soup.find_all(['p', 'h1', 'h2', 'h3', 'li'])
+                scraped_text = " ".join([t.get_text(strip=True) for t in text_elements])
+
+                if len(scraped_text) > 500:
+                    product_description = scraped_text[:3000]
+                    print(f"Successfully scraped {len(product_description)} chars")
+                else:
+                    print("Scraped text too short, using fallback.")
+        except Exception as scrape_error:
+            print(f"⚠️ Scraping failed for {product_url}: {scrape_error}")
+            print("Continuing with manual product name only...")
 
     # --- Node 2: AI Creative Director (with image analysis if available) ---
     try:
@@ -261,7 +260,7 @@ async def generate_campaign(
             print("📝 Generating creative brief with image analysis...")
         else:
             print("📝 Generating creative brief from product text only...")
-        brief = await get_creative_brief(text_content, image_analysis=image_analysis)
+        brief = await get_creative_brief(product_description, image_analysis=image_analysis)
         product_name = product_name or brief.get("product_name", "Untitled")
         platforms_brief = brief.get("platforms", [])
     except Exception as e:
