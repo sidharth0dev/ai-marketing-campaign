@@ -240,7 +240,7 @@ export default function DashboardPage() {
 
   const handleDeleteCampaign = async (campaignId: number) => {
     if (!window.confirm("Are you sure you want to delete this campaign?")) {
-      return;
+      return false;
     }
 
     try {
@@ -250,10 +250,21 @@ export default function DashboardPage() {
         setActiveCampaign(null);
       }
       toast.success("Campaign deleted");
+      return true;
     } catch (error: any) {
       console.error("Failed to delete campaign", error);
       const message = error?.response?.data?.detail || "Unable to delete campaign.";
       toast.error(message);
+      return false;
+    }
+  };
+
+
+  const handleDeleteActiveCampaign = async () => {
+    if (!activeCampaign) return;
+    const success = await handleDeleteCampaign(activeCampaign.id);
+    if (success) {
+      router.push("/");
     }
   };
 
@@ -602,15 +613,25 @@ export default function DashboardPage() {
                   Campaign preview
                   <div className="flex items-center gap-2">
                     {activeCampaign && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleBatchExport(activeCampaign.id)}
-                        className="rounded-full border-white/20 bg-white/5 text-slate-100 shadow-md transition-all duration-200 hover:scale-105 hover:border-pink-400 hover:shadow-[0_0_25px_rgba(236,72,153,0.35)]"
-                      >
-                        <Package className="mr-2 h-4 w-4" />
-                        Export All
-                      </Button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleBatchExport(activeCampaign.id)}
+                          className="rounded-full border-white/20 bg-white/5 text-slate-100 shadow-md transition-all duration-200 hover:scale-105 hover:border-pink-400 hover:shadow-[0_0_25px_rgba(236,72,153,0.35)]"
+                        >
+                          <Package className="mr-2 h-4 w-4" />
+                          Export All
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleDeleteActiveCampaign}
+                          className="rounded-full border border-red-600 text-red-400 transition-all duration-200 hover:bg-red-600 hover:text-white"
+                        >
+                          Delete Campaign
+                        </Button>
+                      </div>
                     )}
                     {isFetchingCampaign && <Loader2 className="h-4 w-4 animate-spin" />}
                   </div>
