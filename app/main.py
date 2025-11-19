@@ -18,7 +18,6 @@ from sqlmodel import Session, select
 from pydantic import BaseModel
 
 from ai_service import (
-    analyze_competitor,
     analyze_product_image,
     generate_image_from_prompt,
     get_analytics_for_caption,
@@ -27,7 +26,8 @@ from ai_service import (
 from config import settings
 from database import create_db_and_tables, get_session
 from models import Campaign, GeneratedImage, GeneratedText, User
-from scraper import scrape_url
+import httpx
+from bs4 import BeautifulSoup
 
 from schemas import (
     ABTestSelectRequest,
@@ -58,11 +58,6 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
-
-
-class CompetitorRequest(BaseModel):
-    url: str
-    product_name: str
 
 origins = [
     "https://ai-marketing-campaign.vercel.app",
@@ -187,12 +182,6 @@ def login_for_access_token(
     return Token(access_token=access_token)
 
 
-@app.post("/analyze-competitor")
-async def analyze_competitor_endpoint(request: CompetitorRequest) -> Dict[str, str]:
-    analysis = await analyze_competitor(request.url, request.product_name)
-    return {"analysis": analysis}
-
-
 @app.post("/api/v1/generate/campaign", response_model=CampaignReadWithDetails)
 async def generate_campaign(
     product_url: str = Form(...),
@@ -200,7 +189,6 @@ async def generate_campaign(
     product_image: Optional[UploadFile] = File(None),
     enable_ab_testing: bool = Form(False),  # A/B testing mode
     num_variations: int = Form(2),  # Number of variations per platform (2-3)
-    competitor_analysis: Optional[str] = Form(None),
     session: Session = Depends(get_session),
     user: User = Depends(get_current_user),
 ) -> CampaignReadWithDetails:
@@ -244,21 +232,20 @@ async def generate_campaign(
             image_analysis = None
 
     # --- Node 1: Scraper ---
-    text_content = scrape_url(product_url)
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(product_url)
+            response.raise_for_status()
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=400, detail=f"Could not fetch URL: {e}")
 
-    if not text_content or text_content.startswith("Scraping failed"):
-        print("⚠ Product page scrape failed or was blocked. Falling back to user-provided context.")
-        fallback_name = (product_name or "Unknown product").strip() or "Unknown product"
-        text_content = (
-            f"Product URL: {product_url}\n"
-            f"Product Name or user input: {fallback_name}\n"
-            "No on-page details could be scraped; rely on this metadata and any uploaded images."
-        )
-
-    if competitor_analysis:
-        text_content = (
-            f"{text_content}\n\nCOMPETITOR INTELLIGENCE:\n{competitor_analysis.strip()[:3000]}"
-        )
+    soup = BeautifulSoup(response.text, "html.parser")
+    main_content = soup.find("main") or soup.find("body")
+    if main_content is None:
+        raise HTTPException(status_code=400, detail="Could not extract content from URL.")
+    text_content = main_content.get_text(separator="\n", strip=True)
+    if not text_content:
+        raise HTTPException(status_code=400, detail="Could not extract content from URL.")
 
     # --- Node 2: AI Creative Director (with image analysis if available) ---
     try:

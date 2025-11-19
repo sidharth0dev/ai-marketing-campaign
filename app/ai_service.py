@@ -14,7 +14,6 @@ from vertexai.generative_models import Content, GenerationConfig, GenerativeMode
 from vertexai.vision_models import Image as VertexImage, ImageGenerationModel
 
 from config import settings
-from scraper import scrape_url
 
 # ---------------------------------------------------------------------------
 # Setup: Configure Vertex AI and Static Image Directory
@@ -267,50 +266,6 @@ CAPTION: "{caption}"
 
     return _clean_json_response(response.text)
 
-
-# ---------------------------------------------------------------------------
-# Node 3b: Competitor Analysis (Vertex AI)
-# ---------------------------------------------------------------------------
-async def analyze_competitor(competitor_url: str, product_name: str) -> str:
-    """Summarize a competitor page and propose a counter strategy."""
-
-    scraped_text = scrape_url(competitor_url)
-    cleaned_text = (scraped_text or "").strip() or "No competitor content was captured."
-    excerpt = cleaned_text[:4000]
-
-    prompt = f"""You are a ruthless, elite Chief Marketing Officer. Your goal is to destroy the competition.
-
-I have scraped the landing page of a competitor:
----
-{excerpt}
----
-
-My product is: {product_name}
-
-Analyze the competitor's text and output a War Room report in clean Markdown with EXACTLY these sections (include the emojis and keep each to 2-3 sentences):
-
-1. 🧠 Their Psychological Hook
-   - Identify the precise psychological trigger they lean on (fear, greed, status, convenience, etc.) and explain how they manipulate it.
-
-2. 🩸 The Weakness (Gap Analysis)
-   - Expose what's missing, overemphasized, or implied to be weak. Read between the lines.
-
-3. 🚀 The Counter-Attack
-   - Give one aggressive, specific positioning move for {product_name} to win the narrative.
-
-Do not add extra sections or fluff."""
-
-    try:
-        prompt_part = Part.from_text(prompt)
-        response = await text_model.generate_content_async(
-            [prompt_part],
-            generation_config=GenerationConfig(max_output_tokens=512),
-        )
-        analysis = response.text.strip()
-        return analysis or "Unable to generate analysis."
-    except Exception as exc:
-        print(f"⚠ Competitor analysis failed: {exc}")
-        return "Unable to generate analysis."
 
 # ---------------------------------------------------------------------------
 # Node 4: The "AI Artist" (Vertex AI Imagen)
