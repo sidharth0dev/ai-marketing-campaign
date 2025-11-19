@@ -877,13 +877,10 @@ async def export_campaign_assets(
             # Add captions summary
             if campaign.texts:
                 captions_lines = [
-                    f"Platform: {text.platform}
-Caption: {text.caption}
-"
+                    f"Platform: {text.platform}\nCaption: {text.caption}\n"
                     for text in campaign.texts
                 ]
-                captions_content = "
-".join(captions_lines)
+                captions_content = "\n".join(captions_lines)
                 zip_file.writestr(
                     f"{campaign.product_name}/captions.txt",
                     captions_content or "No captions available."
