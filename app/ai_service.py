@@ -304,7 +304,7 @@ Do not add extra sections or fluff."""
         prompt_part = Part.from_text(prompt)
         response = await text_model.generate_content_async(
             [prompt_part],
-            generation_config=GenerationConfig(max_output_tokens=512, response_mime_type="text/markdown"),
+            generation_config=GenerationConfig(max_output_tokens=512),
         )
         analysis = response.text.strip()
         return analysis or "Unable to generate analysis."
