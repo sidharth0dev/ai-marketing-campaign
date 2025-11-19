@@ -232,20 +232,28 @@ async def generate_campaign(
             image_analysis = None
 
     # --- Node 1: Scraper ---
+    text_content = ""
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(product_url)
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            response = await client.get(product_url, follow_redirects=True)
             response.raise_for_status()
-    except httpx.RequestError as e:
-        raise HTTPException(status_code=400, detail=f"Could not fetch URL: {e}")
+            soup = BeautifulSoup(response.text, "html.parser")
+            main_content = soup.find("main") or soup.find("body")
+            if main_content:
+                text_content = main_content.get_text(separator="
+", strip=True)
+    except Exception as scrape_error:
+        print(f"⚠ Product scrape failed for {product_url}: {scrape_error}")
 
-    soup = BeautifulSoup(response.text, "html.parser")
-    main_content = soup.find("main") or soup.find("body")
-    if main_content is None:
-        raise HTTPException(status_code=400, detail="Could not extract content from URL.")
-    text_content = main_content.get_text(separator="\n", strip=True)
     if not text_content:
-        raise HTTPException(status_code=400, detail="Could not extract content from URL.")
+        fallback_name = (product_name or "Unknown product").strip() or "Unknown product"
+        text_content = (
+            f"Product URL: {product_url}
+"
+            f"Product Name or user input: {fallback_name}
+"
+            "No on-page details could be scraped; rely on this metadata and any uploaded images."
+        )
 
     # --- Node 2: AI Creative Director (with image analysis if available) ---
     try:
