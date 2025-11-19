@@ -461,11 +461,17 @@ async def delete_campaign(
     if campaign.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Not authorized to delete this campaign")
 
-    delete_gcs_file(campaign.original_product_image_url)
+    try:
+        delete_gcs_file(campaign.original_product_image_url)
+    except Exception as e:
+        print(f"⚠ Unable to delete GCS original image: {e}")
     delete_local_file(campaign.original_product_image_url)
 
     for image in campaign.images:
-        delete_gcs_file(image.image_url)
+        try:
+            delete_gcs_file(image.image_url)
+        except Exception as e:
+            print(f"⚠ Unable to delete GCS image {image.image_url}: {e}")
         delete_local_file(image.image_url)
         session.delete(image)
 
