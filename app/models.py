@@ -48,8 +48,12 @@ class Campaign(CampaignBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     owner_id: int = Field(foreign_key="users.id")
     owner: User = Relationship(back_populates="campaigns")
-    texts: List["GeneratedText"] = Relationship(back_populates="campaign")
-    images: List["GeneratedImage"] = Relationship(back_populates="campaign")
+    texts: List["GeneratedText"] = Relationship(
+        back_populates="campaign", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
+    images: List["GeneratedImage"] = Relationship(
+        back_populates="campaign", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
 
 
 class GeneratedText(GeneratedTextBase, table=True):
