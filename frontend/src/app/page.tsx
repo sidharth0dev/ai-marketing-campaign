@@ -687,7 +687,7 @@ export default function DashboardPage() {
                             {/* A/B Testing Variations */}
                             {hasVariations && (
                               <div className="rounded-lg border border-white/10 bg-slate-800/30 p-4">
-                                <h3 className="mb-4 font-semibold">A/B Testing Variations</h3>
+                                <h3 className="mb-4 font-semibold text-slate-100">A/B Testing Variations</h3>
                                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                   {platformImages.map((img) => {
                                     const isSelected = img.is_selected ?? false;
