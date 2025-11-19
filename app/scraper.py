@@ -135,8 +135,7 @@ def scrape_url(url: str) -> str:
         if jina_result:
             trimmed = jina_result[:CONTENT_LIMIT]
             if len(trimmed) < 500:
-                trimmed = ("[WARNING: The website blocked most content, analysis may be limited based on meta-tags only]
-" + trimmed)
+                trimmed = "[WARNING: The website blocked most content, analysis may be limited based on meta-tags only]\n" + trimmed
             print(f"Jina scraping status: length={len(trimmed)}")
             return trimmed
 
