@@ -34,6 +34,7 @@ import {
   Package,
   Eye,
   CheckCircle2,
+  Trash,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -236,6 +237,26 @@ export default function DashboardPage() {
     }
   };
 
+
+  const handleDeleteCampaign = async (campaignId: number) => {
+    if (!window.confirm("Are you sure you want to delete this campaign?")) {
+      return;
+    }
+
+    try {
+      await api.delete(`/campaigns/${campaignId}`);
+      setCampaigns((prev) => prev.filter((campaign) => campaign.id !== campaignId));
+      if (activeCampaign?.id === campaignId) {
+        setActiveCampaign(null);
+      }
+      toast.success("Campaign deleted");
+    } catch (error: any) {
+      console.error("Failed to delete campaign", error);
+      const message = error?.response?.data?.detail || "Unable to delete campaign.";
+      toast.error(message);
+    }
+  };
+
   const handleRegenerateImage = async (campaignId: number, platform: string, variationNumber: number = 0) => {
     try {
       const toastId = toast.loading(`Regenerating image for ${platform}...`);
@@ -415,11 +436,24 @@ export default function DashboardPage() {
                           : "border-border"
                       }`}
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <h3 className="font-medium text-slate-100">{campaign.product_name}</h3>
-                        <span className="text-xs text-slate-300">
-                          {formatDate(campaign.created_at)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-300">
+                            {formatDate(campaign.created_at)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleDeleteCampaign(campaign.id);
+                            }}
+                            className="rounded-full p-1 text-red-500 transition-colors hover:text-red-700"
+                            title="Delete campaign"
+                          >
+                            <Trash className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                       <p className="mt-1 truncate text-xs text-slate-300">
                         {campaign.product_url}
@@ -598,7 +632,7 @@ export default function DashboardPage() {
                         <TabsTrigger
                           key={text.id}
                           value={text.platform}
-                          className="rounded-full px-4 py-2 text-sm text-slate-200 transition-all duration-300 hover:bg-white/10 hover:text-white data-[state=active]:border-b-2 data-[state=active]:border-pink-400 data-[state=active]:text-white data-[state=active]:shadow-[0_0_25px_rgba(236,72,153,0.45)]"
+                          className="rounded-full px-4 py-2 text-sm text-slate-300 transition-all duration-300 hover:bg-white/10 hover:text-white data-[state=active]:border-b-2 data-[state=active]:border-pink-400 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-[0_0_25px_rgba(236,72,153,0.45)]"
                         >
                           {text.platform}
                         </TabsTrigger>
@@ -642,7 +676,7 @@ export default function DashboardPage() {
                                         }`}
                                       >
                                         <div className="mb-2 flex items-center justify-between">
-                                          <span className="text-xs font-medium">
+                                          <span className="text-xs font-semibold text-slate-100">
                                             {isMain ? "Main" : `Variation ${img.variation_number}`}
                                           </span>
                                           <button
@@ -671,7 +705,7 @@ export default function DashboardPage() {
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => handleDownload(img.image_url)}
-                                            className="h-7 flex-1 text-xs"
+                                            className="h-7 flex-1 text-xs text-slate-200 hover:text-white"
                                           >
                                             <Download className="h-3 w-3" />
                                           </Button>
@@ -685,7 +719,7 @@ export default function DashboardPage() {
                                                 img.variation_number ?? 0
                                               )
                                             }
-                                            className="h-7 flex-1 text-xs"
+                                            className="h-7 flex-1 text-xs text-slate-200 hover:text-white"
                                           >
                                             <RefreshCw className="h-3 w-3" />
                                           </Button>
@@ -724,7 +758,7 @@ export default function DashboardPage() {
                                                   `);
                                                 }
                                               }}
-                                              className="h-7 flex-1 text-xs"
+                                              className="h-7 flex-1 text-xs text-slate-200 hover:text-white"
                                               title="Compare with original"
                                             >
                                               <Eye className="h-3 w-3" />
@@ -835,21 +869,23 @@ export default function DashboardPage() {
                               </div>
 
                             <div className="flex flex-col space-y-4">
-                              <div className="flex items-center justify-between">
-                                <h3 className="font-semibold text-slate-100">Caption</h3>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleCopy(text.caption)}
-                                  className="rounded-full border-white/20 bg-white/5 text-slate-100 shadow-md transition-all duration-200 hover:scale-105 hover:border-pink-400 hover:shadow-[0_0_25px_rgba(236,72,153,0.35)]"
-                                >
-                                  <Copy className="mr-2 h-4 w-4" />
-                                  Copy
-                                </Button>
+                              <div className="rounded-lg border bg-white p-4 text-gray-900 shadow-lg">
+                                <div className="flex items-center justify-between">
+                                  <h3 className="font-semibold text-gray-900">Caption</h3>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleCopy(text.caption)}
+                                    className="rounded-full border-gray-200 bg-gray-900/5 text-gray-900 transition-all duration-200 hover:bg-gray-900 hover:text-white"
+                                  >
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    Copy
+                                  </Button>
+                                </div>
+                                <p className="mt-3 rounded-md border border-gray-200 bg-white p-4 text-sm text-gray-900">
+                                  {text.caption}
+                                </p>
                               </div>
-                              <p className="rounded-md border bg-muted/50 p-4 text-sm">
-                                {text.caption}
-                              </p>
 
                               <div>
                                 <h3 className="font-semibold text-slate-100">Analytics</h3>

@@ -1,0 +1,24 @@
+# Inherit ignore rules from git
+.git/
+.gitignore
+
+# Python virtual environments and caches
+.venv/
+app/.venv/
+__pycache__/
+app/__pycache__/
+*.pyc
+
+# Node/Next.js artifacts are unnecessary for the backend deploy
+frontend/
+node_modules/
+
+# Local environment/config files
+.env*
+app/.env*
+app/service-account-key.json
+service-account-key.json
+
+# OS junk
+.DS_Store
+Thumbs.db

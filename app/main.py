@@ -28,6 +28,7 @@ from database import create_db_and_tables, get_session
 from models import Campaign, GeneratedImage, GeneratedText, User
 import httpx
 from bs4 import BeautifulSoup
+from google.cloud import storage
 
 from schemas import (
     ABTestSelectRequest,
@@ -80,8 +81,42 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 IMAGE_DIR = Path("static/images")
 IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
+storage_client = storage.Client()
+GCS_BUCKET_NAME = "ai-marketing-campaign-images-sidharth"
+
 
 # Helper function for image generation with retries
+# Helper function for deleting images from GCS
+def delete_local_file(file_url: Optional[str]) -> None:
+    if not file_url or not file_url.startswith("/static/"):
+        return
+
+    try:
+        local_path = Path(file_url.lstrip("/"))
+        if local_path.exists():
+            local_path.unlink()
+            print(f"✓ Deleted local asset: {local_path}")
+    except Exception as e:
+        print(f"⚠ Failed to delete local asset {file_url}: {e}")
+
+
+def delete_gcs_file(file_url: Optional[str]) -> None:
+    if not file_url or GCS_BUCKET_NAME not in file_url:
+        return
+
+    try:
+        path_part = file_url.split(f"{GCS_BUCKET_NAME}/", 1)
+        blob_name = path_part[1] if len(path_part) > 1 else ""
+        if not blob_name:
+            return
+        bucket = storage_client.bucket(GCS_BUCKET_NAME)
+        blob = bucket.blob(blob_name)
+        blob.delete()
+        print(f"✓ Deleted GCS asset: {blob_name}")
+    except Exception as e:
+        print(f"⚠ Failed to delete GCS asset {file_url}: {e}")
+
+
 async def generate_image_with_guarantee(prompt: str, platform_name: str) -> str:
     """Generate image with multiple retry attempts to guarantee a result using text-to-image generation."""
     max_attempts = 5  # More attempts for reliability
@@ -404,6 +439,40 @@ async def generate_campaign(
         raise HTTPException(status_code=500, detail="Failed to load generated campaign.")
 
     return CampaignGenerateResponse.model_validate(campaign_with_details)
+
+
+@app.delete("/campaigns/{campaign_id}")
+async def delete_campaign(
+    campaign_id: int,
+    session: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+) -> Dict[str, bool]:
+    campaign = (
+        session.exec(
+            select(Campaign)
+            .where(Campaign.id == campaign_id)
+            .options(selectinload(Campaign.images))
+        ).first()
+    )
+
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+
+    if campaign.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this campaign")
+
+    delete_gcs_file(campaign.original_product_image_url)
+    delete_local_file(campaign.original_product_image_url)
+
+    for image in campaign.images:
+        delete_gcs_file(image.image_url)
+        delete_local_file(image.image_url)
+        session.delete(image)
+
+    session.delete(campaign)
+    session.commit()
+
+    return {"ok": True}
 
 
 @app.get("/api/v1/campaigns/", response_model=List[CampaignRead])
