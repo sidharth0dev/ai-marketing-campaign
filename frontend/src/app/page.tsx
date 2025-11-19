@@ -100,6 +100,11 @@ const scoreColor = (score: number | null) => {
   return "text-rose-400";
 };
 
+const resolveAssetUrl = (path?: string | null) => {
+  if (!path) return "";
+  return path.startsWith("http") ? path : `${API_URL}${path}`;
+};
+
 export default function DashboardPage() {
   const router = useRouter();
   const { authToken, api, logout } = useApi();
@@ -182,8 +187,8 @@ export default function DashboardPage() {
 
   const handleDownload = async (imageUrl: string) => {
     try {
-      const fullUrl = `${API_URL}${imageUrl}`;
-      const response = await fetch(fullUrl);
+      const assetUrl = resolveAssetUrl(imageUrl);
+      const response = await fetch(assetUrl);
       if (!response.ok) {
         throw new Error("Failed to fetch image");
       }
@@ -341,7 +346,7 @@ export default function DashboardPage() {
           <Card className="transition-transform duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-emerald-500/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardDescription className="text-slate-200">Total campaigns</CardDescription>
-              <FolderOpen className="h-4 w-4 text-muted-foreground" />
+              <FolderOpen className="h-4 w-4 text-slate-300" />
             </CardHeader>
             <CardContent>
               <CardTitle className="text-4xl font-semibold text-blue-400">
@@ -352,7 +357,7 @@ export default function DashboardPage() {
           <Card className="transition-transform duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-emerald-500/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardDescription className="text-slate-200">Assets in current view</CardDescription>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <BarChart3 className="h-4 w-4 text-slate-300" />
             </CardHeader>
             <CardContent>
               <CardTitle className="text-4xl font-semibold text-blue-400">
@@ -363,7 +368,7 @@ export default function DashboardPage() {
           <Card className="sm:col-span-2 lg:col-span-1 transition-transform duration-300 hover:scale-[1.02] hover:border-white/30 hover:shadow-emerald-500/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardDescription className="text-slate-200">Last generated</CardDescription>
-              <CalendarClock className="h-4 w-4 text-muted-foreground" />
+              <CalendarClock className="h-4 w-4 text-slate-300" />
             </CardHeader>
             <CardContent>
               <CardTitle className="text-2xl font-semibold text-blue-300">
@@ -411,7 +416,7 @@ export default function DashboardPage() {
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <h3 className="font-medium">{campaign.product_name}</h3>
+                        <h3 className="font-medium text-slate-100">{campaign.product_name}</h3>
                         <span className="text-xs text-slate-300">
                           {formatDate(campaign.created_at)}
                         </span>
@@ -622,7 +627,7 @@ export default function DashboardPage() {
                                   {platformImages.map((img) => {
                                     const isSelected = img.is_selected ?? false;
                                     const isMain = (img.variation_number ?? 0) === 0;
-                                    const fullImageUrl = `${API_URL}${img.image_url}`;
+                                    const fullImageUrl = resolveAssetUrl(img.image_url);
                                     const originalUrl = img.original_image_url
                                       ? `${API_URL}${img.original_image_url}`
                                       : null;
@@ -736,7 +741,7 @@ export default function DashboardPage() {
                             <div className="grid gap-6 lg:grid-cols-2">
                               <div className="flex flex-col space-y-4">
                                 <div className="flex items-center justify-between">
-                                  <h3 className="font-semibold">
+                                  <h3 className="font-semibold text-slate-100">
                                     {hasVariations ? "Selected image" : "Generated image"}
                                   </h3>
                                   {mainImage && (
@@ -767,7 +772,7 @@ export default function DashboardPage() {
                                 {mainImage ? (
                                   <div className="relative">
                                     <img
-                                      src={`${API_URL}${mainImage.image_url}`}
+                                      src={resolveAssetUrl(mainImage.image_url)}
                                       alt={mainImage.image_prompt || "Generated campaign visual"}
                                       className="h-full w-full rounded-md border object-cover"
                                       onError={(event) => {
@@ -781,8 +786,8 @@ export default function DashboardPage() {
                                         size="sm"
                                         onClick={() => {
                                           // Simple comparison: open both images side by side
-                                          const originalUrl = `${API_URL}${mainImage.original_image_url}`;
-                                          const generatedUrl = `${API_URL}${mainImage.image_url}`;
+                                          const originalUrl = resolveAssetUrl(mainImage.original_image_url);
+                                          const generatedUrl = resolveAssetUrl(mainImage.image_url);
                                           // Create a simple comparison view
                                           const comparisonWindow = window.open("", "_blank");
                                           if (comparisonWindow) {
@@ -824,14 +829,14 @@ export default function DashboardPage() {
                                   </div>
                                 ) : (
                                   <div className="flex h-64 items-center justify-center rounded-md border border-dashed">
-                                    <p className="text-sm text-muted-foreground">Image generation failed.</p>
+                                    <p className="text-sm text-slate-300">Image generation failed.</p>
                                   </div>
                                 )}
                               </div>
 
                             <div className="flex flex-col space-y-4">
                               <div className="flex items-center justify-between">
-                                <h3 className="font-semibold">Caption</h3>
+                                <h3 className="font-semibold text-slate-100">Caption</h3>
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -847,33 +852,33 @@ export default function DashboardPage() {
                               </p>
 
                               <div>
-                                <h3 className="font-semibold">Analytics</h3>
+                                <h3 className="font-semibold text-slate-100">Analytics</h3>
                                 <div className="mt-3 grid grid-cols-2 gap-4">
-                                  <Card className="bg-muted/40">
+                                  <Card className="bg-white text-gray-900 shadow-lg">
                                     <CardHeader>
-                                      <CardDescription>Persuasiveness</CardDescription>
+                                      <CardDescription className="text-sm font-semibold text-gray-600">Persuasiveness</CardDescription>
                                       <CardTitle
                                         className={`text-6xl font-semibold ${scoreColor(
                                           text.persuasiveness_score
                                         )}`}
                                       >
                                         {text.persuasiveness_score ?? "—"}
-                                        <span className="ml-1 text-base text-muted-foreground">
+                                        <span className="ml-1 text-base text-gray-500">
                                           / 10
                                         </span>
                                       </CardTitle>
                                     </CardHeader>
                                   </Card>
-                                  <Card className="bg-muted/40">
+                                  <Card className="bg-white text-gray-900 shadow-lg">
                                     <CardHeader>
-                                      <CardDescription>Clarity</CardDescription>
+                                      <CardDescription className="text-sm font-semibold text-gray-600">Clarity</CardDescription>
                                       <CardTitle
                                         className={`text-6xl font-semibold ${scoreColor(
                                           text.clarity_score
                                         )}`}
                                       >
                                         {text.clarity_score ?? "—"}
-                                        <span className="ml-1 text-base text-muted-foreground">
+                                        <span className="ml-1 text-base text-gray-500">
                                           / 10
                                         </span>
                                       </CardTitle>
@@ -883,8 +888,8 @@ export default function DashboardPage() {
                               </div>
 
                               <div>
-                                <h3 className="font-semibold">AI feedback</h3>
-                                <p className="rounded-md border bg-muted/50 p-4 text-sm italic text-muted-foreground">
+                                <h3 className="font-semibold text-slate-100">AI feedback</h3>
+                                <p className="rounded-md border bg-white p-4 text-sm italic text-gray-900">
                                   {text.feedback ? `"${text.feedback}"` : "No feedback provided."}
                                 </p>
                               </div>
@@ -897,7 +902,7 @@ export default function DashboardPage() {
                   </Tabs>
                 ) : (
                   <div className="flex min-h-[220px] items-center justify-center rounded-md border border-dashed">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-slate-300">
                       Select a campaign from the list or generate a new one to see its outputs here.
                     </p>
                   </div>

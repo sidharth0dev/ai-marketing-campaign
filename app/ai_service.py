@@ -12,6 +12,7 @@ import vertexai
 from PIL import Image as PIL_Image
 from vertexai.generative_models import Content, GenerationConfig, GenerativeModel, Part
 from vertexai.vision_models import Image as VertexImage, ImageGenerationModel
+from google.cloud import storage
 
 from config import settings
 
@@ -31,6 +32,20 @@ IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 # ---------------------------------------------------------------------------
 text_model = GenerativeModel("gemini-2.5-flash")
 image_model = ImageGenerationModel.from_pretrained("imagen-3.0-fast-generate-001")
+storage_client = storage.Client()
+GCS_BUCKET_NAME = "ai-marketing-campaign-images-sidharth"
+
+async def upload_image_to_gcs(image_bytes: bytes, filename: str) -> str:
+    """Upload raw image bytes to GCS and return the public URL."""
+
+    def _upload() -> str:
+        bucket = storage_client.bucket(GCS_BUCKET_NAME)
+        blob = bucket.blob(filename)
+        blob.upload_from_string(image_bytes, content_type="image/png")
+        blob.make_public()
+        return blob.public_url
+
+    return await asyncio.to_thread(_upload)
 
 # ---------------------------------------------------------------------------
 # Helper: JSON Parsing (Handles raw text responses)
@@ -330,15 +345,10 @@ async def generate_image_from_prompt(prompt: str, aspect_ratio: str = "1:1", max
                 raise ValueError("PIL image is None")
 
             filename = f"{uuid.uuid4()}.png"
-            filepath = IMAGE_DIR / filename
-
-            await asyncio.to_thread(pil_image.save, filepath, "PNG")
-
-            # Verify file was created
-            if not filepath.exists():
-                raise ValueError(f"Image file was not created: {filepath}")
-
-            return f"/static/images/{filename}"
+            buffer = io.BytesIO()
+            await asyncio.to_thread(pil_image.save, buffer, "PNG")
+            public_url = await upload_image_to_gcs(buffer.getvalue(), filename)
+            return public_url
 
         except asyncio.TimeoutError:
             print(f"Image generation timed out (attempt {attempt + 1}/{max_retries})")
@@ -494,16 +504,11 @@ async def generate_image_from_reference(
 
             # Save enhanced image
             filename = f"{uuid.uuid4()}.png"
-            filepath = IMAGE_DIR / filename
-
-            await asyncio.to_thread(pil_image.save, filepath, "PNG")
-
-            # Verify file was created
-            if not filepath.exists():
-                raise ValueError(f"Image file was not created: {filepath}")
-
+            buffer = io.BytesIO()
+            await asyncio.to_thread(pil_image.save, buffer, "PNG")
+            public_url = await upload_image_to_gcs(buffer.getvalue(), filename)
             print(f"✓ Enhanced image generated from reference")
-            return f"/static/images/{filename}"
+            return public_url
 
         except asyncio.TimeoutError:
             print(f"Image enhancement timed out (attempt {attempt + 1}/{max_retries})")
