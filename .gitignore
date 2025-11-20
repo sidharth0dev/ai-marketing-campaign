@@ -21,3 +21,21 @@ Thumbs.db
 
 # Backend env
 app/.env
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Secrets
+.env
+.env.local
+
+# Database
+*.db
+*.sqlite3
+
+# IDE/OS
+.DS_Store
+.vscode/
