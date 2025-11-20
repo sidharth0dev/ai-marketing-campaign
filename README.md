@@ -9,7 +9,7 @@
 
 Campaign Studio is an end-to-end **autonomous AI marketing agent** that scrapes product URLs, generates platform-specific ad copy, renders campaign-ready imagery, and synchronizes all assets to the cloud. It ships with a polished dark-mode dashboard, persistent storage on Google Cloud Storage, and production-ready API endpoints.
 
-> **Live Demo:** _Coming soon – add your deployment URL here_
+> **Live Demo:** https://ai-marketing-campaign.vercel.app/
 
 ![Dashboard Screenshot](./assets/dashboard-preview.png)
 
