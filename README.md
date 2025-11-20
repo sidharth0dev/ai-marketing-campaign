@@ -10,7 +10,7 @@
 Campaign Studio is an end-to-end **autonomous AI marketing agent** that scrapes product URLs, generates platform-specific ad copy, renders campaign-ready imagery, and synchronizes all assets to the cloud. It ships with a polished dark-mode dashboard, persistent storage on Google Cloud Storage, and production-ready API endpoints.
 
 > **Live Demo:** https://ai-marketing-campaign.vercel.app/
-
+ 
 
 
 ---
@@ -29,7 +29,7 @@ Campaign Studio is an end-to-end **autonomous AI marketing agent** that scrapes 
 ```mermaid
 flowchart LR
     subgraph Client
-        UI[Next.js 13 App Router]
+        UI[Next.js 16 App Router]
     end
 
     subgraph Backend
@@ -59,7 +59,7 @@ flowchart LR
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** Next.js 13, React 19, Tailwind CSS v4, Radix UI, framer-motion, next-themes, Sonner
+- **Frontend:** Next.js 16, React 19, Tailwind CSS v4, Radix UI, framer-motion, next-themes, Sonner
 - **Backend:** FastAPI, SQLModel, Vertex AI SDK, httpx, Pillow, Google Cloud Storage SDK
 - **Infrastructure:** Docker, Google Cloud Run, Neon Postgres, Vercel, GitHub Actions (extendable)
 
