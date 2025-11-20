@@ -139,8 +139,7 @@ frontend/
   ├── src/app/page.tsx     # Dashboard & campaign UI
   ├── src/components/ui    # Reusable primitives
   └── package.json
-assets/
-  └── dashboard-preview.png (placeholder)
+
 ```
 
 ---
